@@ -15,7 +15,7 @@ Looking at parameters in the dataset, we may assume that number of cylinders (cy
 
 ## Model selection  
 We'll fit several models, subsequently adding predictors one by one and test the models using the analysis of variance (anova).  
-Since our main questions are about the relationship of miles per gallon and transmission type, the first model will only include one predictor: *factor(am)*. The model will show the mean(mpg) for cars with automatic transmission (Intercept) and the difference for the mean(mpg) for cars with manual transmission from the atomatic ones (factor(am)1 coefficient).  
+Since our main questions are about the relationship of miles per gallon and transmission type, the first model will only include one predictor: *factor(am)*. The model will show the mean mpg for cars with automatic transmission (Intercept) and the difference of the mean mpg for cars with manual transmission  (factor(am)1 coefficient) from the atomatic ones.  
 ```{r, echo = FALSE}
 fit1 <- lm(mpg ~ factor(am), mtcars)
 summary(fit1)$call
@@ -30,7 +30,7 @@ fit3 <- lm(mpg ~ factor(am) + hp + wt, mtcars)
 fit4 <- lm(mpg ~ factor(am) + hp + wt + factor(cyl), mtcars)
 anova(fit1,fit2,fit3,fit4)
 ```
-Predictors *disp*, *drat*, *qsec*, *vs*, *gear* and *carb* did not improve the model. Predictor *factor(cyl)* was useful at some point but trying to use it in different order in the nested test, it seems that it does not lead to significant improvement compared to the model with *hp* and *wt*. It is seen from the parameters of the model 4. The p-value is bigger than the level 0.05. So, we choose model 3 for further analysis.  
+Predictors *disp*, *drat*, *qsec*, *vs*, *gear* and *carb* did not improve the model. Predictor *factor(cyl)* was useful at some point but trying to use it in different order in the nested test, it seems that it does not lead to significant improvement compared to the model with *hp* and *wt* only. It is seen from the parameters of the model 4 - the p-value is bigger than 0.05. So, we choose previous model 3 for further analysis.  
 
 ## Model diagnostics  
 We need to check the normality of the residuals in order to be sure that `anova` results can be trusted. We'll use `shapiro.test` on resuduals of the chosen model.  
@@ -44,7 +44,8 @@ If we look at model diagnostics plots (provided in Appendix), we can see that th
 ```{r, echo = FALSE}
 summary(fit3)$coefficients
 ```
-From the coefficients we can see that for manual transmission (factor(am)1), the estimated change of *mpg* is `r summary(fit3)$coef[2,1]` compared to automatic transmission with *hp* and *wt* fixed. However, **looking at p-value = `r summary(fit3)$coef[2,4]` which is bigger than 0.05, the change in *mpg* is not statistically significant**. Based on this result, the answers for the questions are provided below:  
+From the coefficients we can see that for manual transmission (factor(am)1), the estimated change of *mpg* is `r summary(fit3)$coef[2,1]` compared to automatic transmission with *hp* and *wt* fixed. However, **looking at p-value = `r summary(fit3)$coef[2,4]` which is bigger than 0.05, or looking at 95% confidence interval for the estimate `r confint(fit3)[2,]` which contains 0, the change in *mpg* is not statistically significant**.  
+Based on this result, the answers for the questions of the analysis are provided below:  
   
 1. Is an automatic or manual transmission better for MPG  
 **There is no difference.**  
