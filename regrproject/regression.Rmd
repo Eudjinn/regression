@@ -1,44 +1,45 @@
 ---
 title: "Exploring the relationship between miles per gallon and transmission type"
 author: "Evgeniy Zabrodskiy"
-date: "16 December 2015"
+date: "18 December 2015"
 output: pdf_document
 ---
 
 ## Executive summary  
 **The analysis has shown that miles per gallon does not depend on the transmission type.**  
-The difference that can be observed without taking into account other predictors is explained by parameters which have quite obvious relation with the mpg outcome, such as the weight of the car (the more the weight of the car - the more gas is needed per mile), the horse power (the more powerful the engine - the more gas it uses per mile).   
+The difference that can be observed without taking into account other predictors is explained by parameters which have quite obvious relation with the mpg outcome, such as the weight of the car (the more the weight of the car - the more gas is needed per mile), the horse power (the more powerful the engine - the more gas it uses per mile).  
 
 ## Exploratory analysis  
-All the figures related to exploratory analysis are provided in the Appendix (dataset structure, first rows of the data, and some plots).  
-Looking at parameters in the dataset, we may assume that number of cylinders (cyl), horse power (hp) and weight (wt) are highly correlated with each other and with the miles per gallon (mpg). There are other parameters which presumably have little effect on the outcome due to lack of correlation. To prove this point, we can look at correlations of parameters using `ggcorr` function (the plot is provided in Appendix).  
+All the figures related to exploratory analysis are provided in the Appendix (dataset structure, first rows of the data and some plots).  
+We may assume that number of cylinders (cyl), horse power (hp) and weight (wt) are highly correlated with each other and with the miles per gallon (mpg). There are other parameters which presumably have little effect on the outcome due to lack of correlation. To prove this point, we can look at correlations of parameters using `ggcorr` function (the plot is provided in Appendix).  
 
 ## Model selection  
-We'll fit several models, subsequently adding predictors one by one and test the models using the analysis of variance (anova).  
-Since our main questions are about the relationship of miles per gallon and transmission type, the first model will only include one predictor: *factor(am)*. The model will show the mean mpg for cars with automatic transmission (Intercept) and the difference of the mean mpg for cars with manual transmission  (factor(am)1 coefficient) from the atomatic ones.  
+We'll fit several models, subsequently adding predictors and test the models using the analysis of variance (anova).  
+Since our main questions are about the relationship of MPG and transmission type, the first model will only include one predictor: *factor(am)*. The model will show the mean MPG for cars with automatic transmission (Intercept) and the difference of the mean MPG for cars with manual transmission  (factor(am)1 coefficient) from the atomatic ones.  
 ```{r, echo = FALSE}
 fit1 <- lm(mpg ~ factor(am), mtcars)
 summary(fit1)$call
 summary(fit1)$coefficients
 ```
-We can see that both coefficients are strongly significant (p-values are much less than the $\alpha = 0.05$). However we intentionally omitted all the other predictors and the model has high bias.  
+Both coefficients are strongly significant (p-values << $\alpha = 0.05$). However, we intentionally omitted all the other predictors and the model has high bias (R-squared is equal to `r summary(fit1)$r.squared` which is quite low).  
 Next several models are nested, i.e. each subsequent model contains additional predictor.
-If new predictor in the next model did not improve the model (i.e. p-value for the F-statistic in anova test was bigger than 0.05) than we fit new model with another predictor instead. As a result we find a model which is cosidered the best.  
+If new predictor does not improve the model (i.e. p-value for the F-statistic in anova test was bigger than 0.05) than we fit new model with another predictor instead. As a result we find a model which is cosidered the best.  
 ```{r, echo = FALSE}
 fit2 <- lm(mpg ~ factor(am) + hp, mtcars)
 fit3 <- lm(mpg ~ factor(am) + hp + wt, mtcars)
 fit4 <- lm(mpg ~ factor(am) + hp + wt + factor(cyl), mtcars)
 anova(fit1,fit2,fit3,fit4)
 ```
-Predictors *disp*, *drat*, *qsec*, *vs*, *gear* and *carb* did not improve the model. Predictor *factor(cyl)* was useful at some point but trying to use it in different order in the nested test, it seems that it does not lead to significant improvement compared to the model with *hp* and *wt* only. It is seen from the parameters of the model 4 - the p-value is bigger than 0.05. So, we choose previous model 3 for further analysis.  
+Predictors *disp*, *drat*, *qsec*, *vs*, *gear* and *carb* did not improve the model. Predictor *factor(cyl)* was useful at some point but trying to use it in different order did not lead to significant improvement compared to the model with *hp* and *wt* only. It is seen from the parameters of the model 4: the p-value is bigger than 0.05. So, **we choose previous model 3 for further analysis**. It is worth mentioning that variance inflation increased after adding *wt* in model 3 due to its high correllation with *hp*.
 
 ## Model diagnostics  
 We need to check the normality of the residuals in order to be sure that `anova` results can be trusted. We'll use `shapiro.test` on resuduals of the chosen model.  
 ```{r, echo = FALSE}
 shapiro.test(fit3$residuals)
 ```
-We can see that the p-value is bigger than 0.05 which means that we fail to reject the null-hypothesis which states that the data is normally distributed. This means that the residuals are normally distributed and the model can be accepted.  
-If we look at model diagnostics plots (provided in Appendix), we can see that there are a few cars that have parameters with high leverage and influence but even removing them doesn't change the answers for the main questions of the analysis.  
+The p-value is bigger than 0.05 which means that we fail to reject the null-hypothesis (the data is normally distributed), thus the model can be accepted.  
+**Multiple R-squared: `r summary(fit3)$r.squared`** which means that most of the variability is explained by the model.  
+Looking at model diagnostics plots (provided in Appendix), we can see that there are a few cars that have parameters with high leverage and influence but even removing them didn't change the answers for the main questions of the analysis.  
 
 ## Questions and Answers
 ```{r, echo = FALSE}
@@ -50,7 +51,7 @@ Based on this result, the answers for the questions of the analysis are provided
 1. Is an automatic or manual transmission better for MPG  
 **There is no difference.**  
 2. Quantify the MPG difference between automatic and manual transmissions  
-**The MPG difference is not statistically significant.**  
+**The MPG difference is not statistically significant**.  
 
 \pagebreak  
 
